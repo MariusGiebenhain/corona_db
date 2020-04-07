@@ -15,11 +15,13 @@ Easy Access and Storage of Corona Cases in Germany
 Integration of information on general distribution of the Population
 
 You may query the Server directly, readonly credentials for direct queries: 
+    
     DataBase:  'corona_db'
     User:      'guest'
     Password:  'pw'
     Host:      '193.196.54.54'
     Port:      '5432'
+    
 (relational scheme will be added here in the future)
 
 
@@ -29,4 +31,5 @@ Additionally, the scripts which are neccessary to build the same postgres-based 
 download the needed data are included (instructions to be added)
 
 corona cases based on data of the Bundesamt für Kartographie und Geodäsie Robert Koch-Institut;
+
 zipcodes provided by zauberware: https://github.com/zauberware/postal-codes-json-xml-csv
