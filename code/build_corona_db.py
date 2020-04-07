@@ -1,5 +1,7 @@
 import psycopg2
 import numpy as np
+import os
+import wget
 from psycopg2.extensions import register_adapter, AsIs
 psycopg2.extensions.register_adapter(np.int64, psycopg2._psycopg.AsIs)
 from pathlib import Path
@@ -119,6 +121,9 @@ def init_corona_db(con, zip_file):
 def main():
     main_dir = Path(__file__).absolute().parent.parent
     zip_file = Path.joinpath(main_dir, 'data', 'zipcodes.de.csv')
+    zip_url = 'https://github.com/zauberware/postal-codes-json-xml-csv/blob/master/data/DE/zipcodes.de.csv'
+    if not os.path.exists(str(zip_file)):
+        wget.download(zip_url, zip_file)
     cred = get_credentials()
     create_corona_db(cred)
     con = psycopg2.connect(
