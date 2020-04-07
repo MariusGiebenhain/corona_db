@@ -15,3 +15,5 @@ Needed packages: psycopg2, pandas, numpy, pathlib, wget, re, os, csv, datetime, 
 Additionally, the scripts which are neccessary to build the same postgres-based database locally and 
 download the needed data are included (instructions to be added)
 
+corona cases based on data of the Bundesamt für Kartographie und Geodäsie Robert Koch-Institut
+zipcodes provided by zauberware: https://github.com/zauberware/postal-codes-json-xml-csv

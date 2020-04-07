@@ -62,14 +62,14 @@ def update_covid(file, con):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Add CSVs to coronaDB.')
+    parser = argparse.ArgumentParser(description='Update cases')
     parser.add_argument('--keep-covid', dest='keep', action='store_true',
                     help='do not replace existing RKI_COVID19.csv')
     args = parser.parse_args()
     url = 'https://opendata.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0.csv?session=undefined'
     main_dir = Path(__file__).absolute().parent.parent
     file = Path.joinpath(main_dir, 'data', 'RKI_COVID19.csv')
-    if os.path.exists(str(file)) or not args.keep:
+    if os.path.exists(str(file)) and not args.keep:
         os.remove(file)
     wget.download(url, out=str(file))
     cred = get_credentials()
