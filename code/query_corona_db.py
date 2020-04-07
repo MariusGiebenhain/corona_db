@@ -1,5 +1,3 @@
-#import re
-#import os
 import csv
 import datetime
 import argparse
