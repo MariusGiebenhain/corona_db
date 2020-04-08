@@ -31,6 +31,7 @@ def create_corona_db(cred):
     cur.execute('CREATE DATABASE {};'.format('corona_db'))
     con.commit()
     con.close()
+    return
 
 
 def tables_corona_db(con):
@@ -88,6 +89,7 @@ def tables_corona_db(con):
     cur.execute(sql_todesfall)
     cur.execute(sql_kreis_2_gebiet)
     cur.close()
+    return
 
 
 def init_corona_db(con, zip_file):
@@ -114,6 +116,7 @@ def init_corona_db(con, zip_file):
     for index, row in kreis_2_gebiet.iterrows():
         cur.execute(sql_insert_kreis_2_gebiet, (row['community_code'], row['zipcode']))
     cur.close()
+    return
 
 
 def main():
@@ -131,6 +134,7 @@ def main():
     init_corona_db(con, zip_file)    
     con.commit()
     con.close()
+    return
 
 
 if __name__ == '__main__':

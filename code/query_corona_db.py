@@ -88,7 +88,6 @@ def create_query():
     if res in ['Land', 'Kreis']: q += ' Kuerzel, '
     if res == 'Kreis': q += 'KRS, '
     q += ' Datum ;'
-    
     return(q)
 
 
@@ -119,6 +118,7 @@ def write_result(file, result):
         writer.writerow(result[0])
         for row in result[1]:
             writer.writerow(row)
+    return
 
 
 
@@ -145,6 +145,7 @@ def main():
     result = query_corona_db(con, query)
     write_result(args.file[0], result)
     con.close()
+    return
 
 
 if __name__ == '__main__':
