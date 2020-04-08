@@ -11,8 +11,10 @@ Easy Access and Storage of Corona Cases in Germany
   (possible options for each specification are shown in parenthesis)
 - the script automatically queries the database server and writes results as CSV to your local target file
 
-**Next step:**
-Integration of information on general distribution of the Population
+Needed packages: psycopg2, pandas, numpy, pathlib, wget, re, os, csv, datetime, argparse
+
+Additionally, the scripts which are neccessary to build the same postgres-based database locally and 
+download the needed data are included (instructions to be added)
 
 You may query the Server directly, readonly credentials for direct queries: 
     
@@ -22,14 +24,14 @@ You may query the Server directly, readonly credentials for direct queries:
     Host:      '193.196.54.54'
     Port:      '5432'
     
-(relational scheme will be added here in the future)
+**Relational Schema:**
+
+![rel_schema](/corona_db.png)
 
 
-Needed packages: psycopg2, pandas, numpy, pathlib, wget, re, os, csv, datetime, argparse
+**Next step:**
+Integration of information on general distribution of the Population
 
-Additionally, the scripts which are neccessary to build the same postgres-based database locally and 
-download the needed data are included (instructions to be added)
-
-corona cases based on data of the Bundesamt für Kartographie und Geodäsie Robert Koch-Institut;
+Corona cases are based on data of the Bundesamt für Kartographie und Geodäsie Robert Koch-Institut;
 
 zipcodes provided by zauberware: https://github.com/zauberware/postal-codes-json-xml-csv
