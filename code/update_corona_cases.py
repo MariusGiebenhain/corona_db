@@ -70,7 +70,7 @@ def main():
     main_dir = Path(__file__).absolute().parent.parent
     file = Path.joinpath(main_dir, 'data', 'RKI_COVID19.csv')
     if os.path.exists(str(file)) and not args.keep:
-        os.remove(file)
+        os.remove(str(file))
     wget.download(url, out=str(file))
     cred = get_credentials()
     con = psycopg2.connect(
