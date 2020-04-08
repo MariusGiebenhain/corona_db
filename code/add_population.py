@@ -12,22 +12,24 @@ def get_credentials():
     dbname = input('DB-Name: ')
     username = input('User Name: ')
     password = input('Password: ')
+    host = input('Host: ')
     port = input('Port: ')
     if len(dbname) == 0: dbname = 'corona_db'
     if len(username) == 0: username = 'postgres'
+    if len(host) == 0: host = 'localhost'
     if len(port) == 0: port = '5432'
-    return {'dbname' : dbname, 'username' : username, 'password' : password, 'port' : port}
+    return {'dbname' : dbname, 'username' : username, 'password' : password, 'host': host, 'port' : port}
+
 
 
 def add_bev_table(con):
     bev_sql = 'CREATE TABLE bevoelkerung (\
         krs INT,\
-        alter_von INT,\
-        alter_bis INT,\
-        geschlecht CHAR(1),\
+        bev CHAR(6),\
         anzahl INT,\
-        PRIMARY KEY(krs, alter_von, alter_bis, geschlecht),\
-        FOREIGN KEY(krs) REFERENCES kreis(krs) ON DELETE CASCADE)'
+        PRIMARY KEY(krs, bev),\
+        FOREIGN KEY(krs) REFERENCES kreis(krs) ON DELETE CASCADE,\
+        FOREIGN KEY(bev) REFERENCES bev_gruppe(bev) ON DELETE CASCADE)'
     with con.cursor() as cur:
         cur.execute(bev_sql)
     return
@@ -35,18 +37,17 @@ def add_bev_table(con):
 
 def add_bev_values(file, con):
     sql_ = 'INSERT INTO bevoelkerung\
-        VALUES(%s, %s, %s, %s, %s)'
-    data = read_csv(file)
-    age_groups = [[0,4],[5,14],[15,34],[35,59],[60,79],[80,125]]
+        VALUES(%s, %s, %s)'
+    data = read_csv(str(file))
+    age_groups = [['00','04'],['05','14'],['15','34'],['35','59'],['60','79'],['80','pl']]
     with con.cursor() as cur:
         for index, row in data.iterrows():
             krs = row['krs']
             for sex in ['m', 'w']:
                 for i in range(len(age_groups)):
-                    age_from = age_groups[i][0]
-                    age_to = age_groups[i][1]
+                    bev = sex + age_groups[i][0] + '_' + age_groups[i][1]
                     n = row[(sex + '.' + str(i))]
-                    cur.execute(sql_, (krs, age_from, age_to, sex, n))
+                    cur.execute(sql_, (krs, bev, n))
     return
 
 
@@ -59,6 +60,7 @@ def main():
             dbname = cred['dbname'],
             user= cred['username'], 
             password = cred['password'],
+            host = cred['host'],
             port = cred['port'])
     add_bev_table(con)
     add_bev_values(file, con)

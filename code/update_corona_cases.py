@@ -28,7 +28,7 @@ def get_credentials():
 def update_covid(file, con):
     sql_flush = 'DELETE FROM meldung;'
     sql_meldung = 'INSERT INTO meldung\
-        VALUES(%s, %s, %s, %s, %s, %s);'
+        VALUES(%s, %s, %s, %s);'
     sql_fall = 'INSERT INTO fall\
         VALUES(%s, %s);'
     sql_todesfall = 'INSERT INTO todesfall\
@@ -37,24 +37,24 @@ def update_covid(file, con):
     cur = con.cursor()
     cur.execute(sql_flush)
     for index, row in data.iterrows():
+        bev = 'w'
+        if row['Geschlecht'] == 'M': bev = 'm'
         age_range = re.findall('\d+', row['Altersgruppe'])
-        if len(age_range) == 0:
-            age_from = age_to = None
+        if len(age_range) == 1:
+            bev += '80_pl'
+        elif len(age_range) == 2:
+            bev += (age_range[0] + '_' + age_range[1])
         else:
-            age_from = age_range[0]
-            age_to = 125
-            if len(age_range) == 2: age_to = age_range[1]
-        sex = 'w'
-        if row['Geschlecht'] == 'M': sex = 'm'
+            bev = ''
         nCase = row['AnzahlFall']
         nDead = row['AnzahlTodesfall']
         date = row['Meldedatum']
         ref = row['ObjectId']
         date = datetime.datetime.strptime(date[0:10], '%Y-%m-%d')
         krs = row['IdLandkreis']
-        if not krs == '0-1':
+        if not (krs == '0-1' or len(bev) == 0):
             if 11000 <= int(krs) < 12000: krs = '11000'
-            cur.execute(sql_meldung, (ref, krs, age_from, age_to, sex, date))
+            cur.execute(sql_meldung, (ref, krs, bev, date))
             if nCase > 0: cur.execute(sql_fall, (ref, nCase))
             if nDead > 0: cur.execute(sql_todesfall, (ref, nDead))
     cur.close()
