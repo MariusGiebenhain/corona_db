@@ -34,4 +34,4 @@ Integration of information on general distribution of the Population
 
 Corona cases are based on data of the Bundesamt für Kartographie und Geodäsie Robert Koch-Institut;
 
-zipcodes provided by zauberware: https://github.com/zauberware/postal-codes-json-xml-csv
+zipcodes provided by zauberware: https://github.com/zauberware/postal-codes-json-xml-csv (CC-BY-4.0 License)
