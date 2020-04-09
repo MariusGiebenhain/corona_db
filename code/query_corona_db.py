@@ -34,6 +34,25 @@ def create_query():
     """
     Interactive creation of SQL-query
     """
+    sql_cases = """
+        SELECT DISTINCT l.name AS Bundesland, l.land, k.name AS Kreis, k.krs, m.datum AS Datum, 
+            SUM(COALESCE(f.anzahl, 0)) OVER (PARTITION BY m.krs ORDER BY m.datum) AS Faelle, 
+            SUM(COALESCE(t.anzahl, 0)) OVER (PARTITION BY m.krs ORDER BY m.datum) AS Todesfaelle
+            FROM meldung m
+            JOIN kreis k ON m.krs = k.krs
+            JOIN land l ON k.land = l.land
+            FULL JOIN fall f ON m.ref = f.ref
+            FULL JOIN todesfall t ON m.ref = t.ref),"""
+    sql_base_pop = """
+        SELECT DISTINCT l.land AS Bundesland, l.land, k.name AS Kreis, k.krs, SUM(b.anzahl) AS Gesamtpopulation
+            FROM kreis k
+            JOIN land l ON k.land = l.land
+            JOIN bevoelkerung b ON k.krs = b.krs
+            GROUP BY l.land, k.krs"""
+    sql_combine = """
+    SELECT f.Bundesland, f.land, f.Kreis, f.krs, f.Datum, f.Faelle, f.Todesfaelle, p.Gesamtpopulation
+        FROM faelle f JOIN population p ON f.krs = p.krs
+        ORDER BY f.land, f.krs, f.datum"""
     res = input('Regionale Auflösung (Bund, Land, Kreis): ')
     date_from = str(input('Meldedatum vom (JJJJ-MM-TT): '))
     date_to = str(input('Meldedatum bis (JJJJ-MM-TT): '))
