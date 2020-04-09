@@ -30,8 +30,10 @@ You may query the Server directly, readonly credentials for direct queries:
 
 
 **Next step:**
-Integration of information on general distribution of the Population
+update of query_corona_db.py
 
 Corona cases are based on data of the Bundesamt für Kartographie und Geodäsie Robert Koch-Institut;
+
+Population number based on Regionalstatistiken/GENESIS(dl-de-by-2.0 License)
 
 zipcodes provided by zauberware: https://github.com/zauberware/postal-codes-json-xml-csv (CC-BY-4.0 License)
