@@ -29,6 +29,72 @@ def get_credentials():
     return {'dbname' : dbname, 'username' : username, 'password' : password, 'host': host, 'port' : port}
 
 
+def case_select(age_from, age_to, sex, change):
+    """
+    Create case-table for WITH statement
+    """
+    sql_cases = 'SELECT DISTINCT l.name AS bundesland, l.land, k.name AS kreis, k.krs, m.datum AS datum, \
+        {}COALESCE(f.anzahl, 0){} AS faelle, \
+        {}COALESCE(t.anzahl, 0){} AS todesfaelle \
+        FROM meldung m \
+        JOIN kreis k ON m.krs = k.krs \
+        JOIN land l ON k.land = l.land \
+        {} \
+        FULL JOIN fall f ON m.ref = f.ref \
+        FULL JOIN todesfall t ON m.ref = t.ref \
+        {}'
+    if change:
+        sum_ = ['', '']
+    else:
+        sum_ = ['SUM(', ') OVER (PARTITION BY m.krs ORDER BY m.datum)']
+    where_ = where_clause(age_from, age_to, sex)
+    if len(where_):
+        join_bev = 'JOIN bev_gruppe b ON m.bev = b.bev'
+    else:
+        join_bev = ''
+    return sql_cases.format(sum_[0], sum_[1], sum_[0], sum_[1], join_bev, where_)
+
+
+
+def base_pop_select():
+    """
+    create base population table for WITH statement
+    """
+    sql_basepop = 'SELECT DISTINCT l.land, k.krs, SUM(b.anzahl) AS gesamtpopulation \
+        FROM kreis k \
+        JOIN land l ON k.land = l.land \
+        JOIN bevoelkerung b ON k.krs = b.krs \
+        GROUP BY l.land, k.krs'
+    return sql_basepop
+
+
+
+def sub_pop_select(age_from, age_to, sex):
+    sql_subpop = 'SELECT DISTINCT l.land, k.krs, SUM(b_.anzahl) AS zielpopulation \
+            FROM kreis k \
+            JOIN land l ON k.land = l.land \
+            JOIN bevoelkerung b_ ON k.krs = b_.krs \
+            JOIN bev_gruppe b ON b_.bev = b.bev \
+            {} \
+            GROUP BY l.land, k.krs'
+    where_ = where_clause(age_from, age_to, sex)
+    return sql_subpop.format(where_)
+
+
+
+def where_clause(age_from, age_to, sex):
+    where_ = ''
+    cond_ = 'WHERE '
+    if len(age_from):
+        where_ += (cond_ + 'b.alter_von > ' + age_from)
+        cond_ = ' AND '
+    if len(age_to):
+        where_ += (cond_ + 'b.alter_bis < ' + age_to)
+        cond_ = ' AND '
+    if len(sex):
+        where_ += (cond_ + 'b.geschlecht = \'' + sex + '\' ')
+    return where_
+
 
 def create_query():
     """
@@ -42,7 +108,7 @@ def create_query():
             JOIN kreis k ON m.krs = k.krs
             JOIN land l ON k.land = l.land
             FULL JOIN fall f ON m.ref = f.ref
-            FULL JOIN todesfall t ON m.ref = t.ref),"""
+            FULL JOIN todesfall t ON m.ref = t.ref"""
     sql_base_pop = """
         SELECT DISTINCT l.land AS Bundesland, l.land, k.name AS Kreis, k.krs, SUM(b.anzahl) AS Gesamtpopulation
             FROM kreis k
@@ -60,6 +126,10 @@ def create_query():
     age_to = input('jünger als (5/15/35/60/80): ')
     sex = input('Geschlecht(w/m)')
     change = input('Gebe Erhöhungen statt absoluter Zahl zurück (W): ')
+    sql_cases = case_select(age_from, age_to, sex, change)
+    sql_base_pop = base_pop_select()
+    sql_sub_pop = sub_pop_select(age_from, age_to, sex)
+    
     if res == 'Land': by = 'partition by l_.land'
     elif res == 'Kreis': by = 'partition by k_.krs'
     else: by = ''
