@@ -33,26 +33,30 @@ def case_select(age_from, age_to, sex, change):
     """
     Create case-table for WITH statement
     """
-    sql_cases = 'SELECT DISTINCT l.name AS bundesland, l.land, k.name AS kreis, k.krs, m.datum AS datum, \
-        {}COALESCE(f.anzahl, 0){} AS faelle, \
-        {}COALESCE(t.anzahl, 0){} AS todesfaelle \
-        FROM meldung m \
-        JOIN kreis k ON m.krs = k.krs \
-        JOIN land l ON k.land = l.land \
-        {} \
-        FULL JOIN fall f ON m.ref = f.ref \
-        FULL JOIN todesfall t ON m.ref = t.ref \
-        {}'
+    sql_cases = 'cases AS (SELECT t_2.krs, t_2.datum, {}COALESCE(t_1.faelle, 0){} AS faelle, {}COALESCE(t_1.todesfaelle, 0){} AS todesfaelle \
+        FROM ( \
+            SELECT DISTINCT m.krs, m.datum AS datum, \
+            SUM(COALESCE(f.anzahl, 0)) AS faelle, \
+            SUM(COALESCE(t.anzahl, 0)) AS todesfaelle \
+            FROM meldung m \
+                FULL JOIN fall f ON m.ref = f.ref \
+                FULL JOIN todesfall t ON m.ref = t.ref \
+                {} \
+            {} \
+            GROUP BY m.krs, m.datum) t_1 \
+        RIGHT JOIN (SELECT k.krs, datum.day AS datum FROM \
+            (SELECT DISTINCT krs FROM kreis) k, \
+            generate_series((SELECT MIN(datum) FROM meldung), (SELECT MAX(datum) FROM meldung), \'1 day\') AS datum(day)) t_2 ON t_1.krs = t_2.krs AND t_1.datum = t_2.datum)'
     if change:
-        sum_ = ['', '']
+        over_ = ['', '']
     else:
-        sum_ = ['SUM(', ') OVER (PARTITION BY m.krs ORDER BY m.datum)']
-    where_ = where_clause(age_from, age_to, sex)
+        over_ = ['SUM(', ') OVER (PARTITION BY t_2.krs ORDER BY t_2.datum)']
+    where_ = where_pop(age_from, age_to, sex)
     if len(where_):
         join_bev = 'JOIN bev_gruppe b ON m.bev = b.bev'
     else:
         join_bev = ''
-    return sql_cases.format(sum_[0], sum_[1], sum_[0], sum_[1], join_bev, where_)
+    return sql_cases.format(over_[0], over_[1], over_[0], over_[1], join_bev, where_)
 
 
 
@@ -60,29 +64,30 @@ def base_pop_select():
     """
     create base population table for WITH statement
     """
-    sql_basepop = 'SELECT DISTINCT l.land, k.krs, SUM(b.anzahl) AS gesamtpopulation \
+    sql_basepop = ', base_pop AS (SELECT DISTINCT k.krs, SUM(b.anzahl) AS gesamtpopulation \
         FROM kreis k \
-        JOIN land l ON k.land = l.land \
         JOIN bevoelkerung b ON k.krs = b.krs \
-        GROUP BY l.land, k.krs'
+        GROUP BY k.krs)'
     return sql_basepop
 
 
 
 def sub_pop_select(age_from, age_to, sex):
-    sql_subpop = 'SELECT DISTINCT l.land, k.krs, SUM(b_.anzahl) AS zielpopulation \
-            FROM kreis k \
-            JOIN land l ON k.land = l.land \
-            JOIN bevoelkerung b_ ON k.krs = b_.krs \
-            JOIN bev_gruppe b ON b_.bev = b.bev \
-            {} \
-            GROUP BY l.land, k.krs'
-    where_ = where_clause(age_from, age_to, sex)
-    return sql_subpop.format(where_)
+    if len(age_from) | len(age_to) | len(sex):
+        sql_subpop = ', sub_pop AS (SELECT DISTINCT k.krs, SUM(b_.anzahl) AS zielpopulation \
+                FROM kreis k \
+                JOIN bevoelkerung b_ ON k.krs = b_.krs \
+                JOIN bev_gruppe b ON b_.bev = b.bev \
+                {} \
+                GROUP BY k.krs)'
+        where_ = where_pop(age_from, age_to, sex)
+        return sql_subpop.format(where_)
+    else:
+        return ''
 
 
 
-def where_clause(age_from, age_to, sex):
+def where_pop(age_from, age_to, sex):
     where_ = ''
     cond_ = 'WHERE '
     if len(age_from):
@@ -96,88 +101,55 @@ def where_clause(age_from, age_to, sex):
     return where_
 
 
+def where_date(date_from, date_to):
+    where_ = ''
+    cond_ = 'WHERE '
+    if len(date_from):
+        where_ += (cond_ + 'c.datum >= \'' + date_from + '\' ')
+        cond_ = ' AND '
+    if len(date_to):
+        where_ += (cond_ + 'c.datum <= \'' + date_to + '\' ')
+    return where_
+
+
 def create_query():
     """
     Interactive creation of SQL-query
     """
-    sql_cases = """
-        SELECT DISTINCT l.name AS Bundesland, l.land, k.name AS Kreis, k.krs, m.datum AS Datum, 
-            SUM(COALESCE(f.anzahl, 0)) OVER (PARTITION BY m.krs ORDER BY m.datum) AS Faelle, 
-            SUM(COALESCE(t.anzahl, 0)) OVER (PARTITION BY m.krs ORDER BY m.datum) AS Todesfaelle
-            FROM meldung m
-            JOIN kreis k ON m.krs = k.krs
-            JOIN land l ON k.land = l.land
-            FULL JOIN fall f ON m.ref = f.ref
-            FULL JOIN todesfall t ON m.ref = t.ref"""
-    sql_base_pop = """
-        SELECT DISTINCT l.land AS Bundesland, l.land, k.name AS Kreis, k.krs, SUM(b.anzahl) AS Gesamtpopulation
-            FROM kreis k
-            JOIN land l ON k.land = l.land
-            JOIN bevoelkerung b ON k.krs = b.krs
-            GROUP BY l.land, k.krs"""
-    sql_combine = """
-    SELECT f.Bundesland, f.land, f.Kreis, f.krs, f.Datum, f.Faelle, f.Todesfaelle, p.Gesamtpopulation
-        FROM faelle f JOIN population p ON f.krs = p.krs
-        ORDER BY f.land, f.krs, f.datum"""
+    query = 'WITH {}{}{} \
+        SELECT {}, \
+            SUM(c.faelle) AS faelle, \
+            SUM(c.todesfaelle) AS todesfaelle, \
+            SUM(p.gesamtpopulation) AS gesamtpopulation \
+            {} \
+        FROM cases c \
+        JOIN kreis k ON c.krs = k.krs \
+        JOIN land l ON k.land = l.land \
+        JOIN base_pop p ON c.krs = p.krs \
+        {} \
+        {} \
+        GROUP BY {} \
+        ORDER BY {};'
     res = input('Regionale Auflösung (Bund, Land, Kreis): ')
     date_from = str(input('Meldedatum vom (JJJJ-MM-TT): '))
     date_to = str(input('Meldedatum bis (JJJJ-MM-TT): '))
     age_from = input('älter als (4/14/34/59/79): ')
     age_to = input('jünger als (5/15/35/60/80): ')
     sex = input('Geschlecht(w/m)')
-    change = input('Gebe Erhöhungen statt absoluter Zahl zurück (W): ')
+    change = input('Gebe Erhöhungen statt absoluter Zahl zurück (W): ') == 'W'
     sql_cases = case_select(age_from, age_to, sex, change)
     sql_base_pop = base_pop_select()
     sql_sub_pop = sub_pop_select(age_from, age_to, sex)
-    
-    if res == 'Land': by = 'partition by l_.land'
-    elif res == 'Kreis': by = 'partition by k_.krs'
-    else: by = ''
-    change = change == 'W'
-    and_ = False
-    where_ = ['WHERE', 'AND']
-    q = 'WITH temp_ AS (SELECT DISTINCT '
-    if res == 'Land': q += ' l_.name AS Land, l_.land AS Kuerzel, '
-    if res == 'Kreis': q += ' l_.name AS Land, l_.land AS Kuerzel, k_.name AS Kreis, k_.krs AS KRS, '
-    q += ' m_.datum AS Datum, '
-    if change: 
-        q += 'SUM(COALESCE(f_.anzahl, 0)) AS Faelle, SUM(COALESCE(t_.anzahl, 0)) AS TodesFaelle ' 
-    else: 
-        q += ('SUM(COALESCE(f_.anzahl, 0)) over (' + by +' order by m_.datum) AS Faelle,' + 
-        ' SUM(COALESCE(t_.anzahl, 0)) over (' + by + ' order by m_.datum) AS TodesFaelle ') 
-    q += (' FROM meldung m_ ' + 
-        ' FULL JOIN fall f_ ON m_.ref = f_.ref ' +
-        ' FULL JOIN todesfall t_ ON m_.ref = t_.ref ' +
-        ' JOIN kreis k_ ON m_.krs = k_.krs ' +
-        ' JOIN land l_ ON k_.land = l_.land ')
-    if len(age_from) > 0: 
-        q += where_[and_] + ' m_.alter_von > ' + age_from + ' '
-        and_ = True
-    if len(age_to) > 0: 
-        q += where_[and_] + ' m_.alter_bis < ' + age_to + ' '
-        and_ = True
-    if len(sex) > 0:
-        q += where_[and_] + ' m_.geschlecht = \'' + sex  + '\' '
-    if change:
-        q += ' GROUP BY m_.datum '
-        if res in ['Land', 'Kreis']: q += ', l_.land '
-        if res == 'Kreis': q += ', k_.krs'
-    and_ = False
-    q += ') SELECT '
-    if res in ['Land', 'Kreis']: q += ' Land, Kuerzel, '
-    if res == 'Kreis': q += 'Kreis, KRS, '
-    q += 'Datum, Faelle, TodesFaelle FROM temp_ '
-    if len(date_from) > 0:
-        q += (where_[and_] + ' Datum >= \'' + date_from + '\' ')
-        and_ = True
-    if len(date_to) > 0:
-        q += (where_[and_] + ' Datum <= \'' + date_to + '\' ')
-        and_ = True
-    q += ' ORDER BY '
-    if res in ['Land', 'Kreis']: q += ' Kuerzel, '
-    if res == 'Kreis': q += 'KRS, '
-    q += ' Datum ;'
-    return(q)
+    sub_pop = ['', '']
+    if len(sql_sub_pop) > 0:
+        sub_pop[0] = ', SUM(s.zielpopulation) AS zielpopulation '
+        sub_pop[1] = ' JOIN sub_pop s ON c.krs = s.krs '
+    where_ = where_date(date_from, date_to)
+    by_ = ''
+    if res in ['Land', 'Kreis']: by_ += 'l.land, l.name, '
+    if res == 'Kreis': by_ += 'k.krs, k.name, '
+    by_ += 'c.datum'
+    return query.format(sql_cases, sql_base_pop, sql_sub_pop, by_, sub_pop[0], sub_pop[1], where_, by_, by_)
 
 
 def query_corona_db(con, query):
