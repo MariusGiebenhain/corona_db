@@ -30,7 +30,7 @@ You may query the Server directly, readonly credentials for direct queries:
 
 
 **Next step:**
-update of query_corona_db.py
+Adding additional Data
 
 Corona cases are based on data of the Bundesamt für Kartographie und Geodäsie Robert Koch-Institut;
 
