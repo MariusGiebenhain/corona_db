@@ -29,11 +29,15 @@ You may query the Server directly, readonly credentials for direct queries:
 ![rel_schema](/corona_db.png)
 
 
-**Next step:**
-Adding additional Data
+**Next steps:**
+- Adding recovered cases
+- English version of the query_corona_db API
+- Adding additional Health Data for German Districts (e.g. hospital beds)
 
 Corona cases are based on data of the Bundesamt für Kartographie und Geodäsie Robert Koch-Institut;
 
 Population number based on Regionalstatistiken/GENESIS(dl-de-by-2.0 License)
 
 zipcodes provided by zauberware: https://github.com/zauberware/postal-codes-json-xml-csv (CC-BY-4.0 License)
+
+Server hosted on bwCloud SCOPE - Science, Operations and Education
