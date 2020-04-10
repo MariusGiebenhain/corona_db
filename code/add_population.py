@@ -9,6 +9,11 @@ from pandas import read_csv
 
 
 def get_credentials():
+    """
+    Ask for access information for database
+    default: local database on 5432-Port with default name(corona_db)
+    -> only password needed
+    """
     dbname = input('DB-Name: ')
     username = input('User Name: ')
     password = input('Password: ')
@@ -23,6 +28,9 @@ def get_credentials():
 
 
 def add_bev_table(con):
+    """
+    Creates table bevoelkerung with population numbers
+    """
     bev_sql = 'CREATE TABLE bevoelkerung (\
         krs INT,\
         bev CHAR(6),\
@@ -36,6 +44,9 @@ def add_bev_table(con):
 
 
 def add_bev_values(file, con):
+    """
+    insert population numbers in bevoelkerung table
+    """
     sql_ = 'INSERT INTO bevoelkerung\
         VALUES(%s, %s, %s)'
     data = read_csv(str(file))
@@ -53,6 +64,9 @@ def add_bev_values(file, con):
 
 
 def main():
+    """
+    build and fill bevoelkerung table
+    """
     main_dir = Path(__file__).absolute().parent.parent
     file = Path.joinpath(main_dir, 'data', 'bev.csv')
     cred = get_credentials()

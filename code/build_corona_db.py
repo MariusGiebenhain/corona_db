@@ -7,6 +7,11 @@ from pandas import read_csv
 
 
 def get_credentials():
+    """
+    Ask for access information for database
+    default: local database on 5432-Port with default name(corona_db)
+    -> only password needed
+    """
     dbname = input('DB-Name: ')
     username = input('User Name: ')
     password = input('Password: ')
@@ -20,6 +25,9 @@ def get_credentials():
 
 
 def create_corona_db(cred):
+    """
+    Create the new DataBase
+    """
     con = psycopg2.connect(
         dbname = 'postgres',
         user = cred['username'], 
@@ -35,6 +43,10 @@ def create_corona_db(cred):
 
 
 def tables_corona_db(con):
+    """
+    create all nec. tables
+    see rel. schema for details
+    """
     sql_land = 'CREATE TABLE land(\
         land CHAR(2),\
         name VARCHAR(255),\
@@ -98,6 +110,9 @@ def tables_corona_db(con):
 
 
 def init_corona_db(con, zip_file, bev_file):
+    """
+    Build land/kreis/gebiet/bev_gruppe structure
+    """
     sql_insert_land = 'INSERT INTO land\
         VALUES (%s, %s);'
     sql_insert_kreis = 'INSERT INTO kreis\
@@ -129,6 +144,12 @@ def init_corona_db(con, zip_file, bev_file):
 
 
 def main():
+    """
+    main-method
+    build file paths
+    ask for database access
+    and build basic structure
+    """
     main_dir = Path(__file__).absolute().parent.parent
     zip_file = Path.joinpath(main_dir, 'data', 'zipcodes.de.csv')
     bev_file = Path.joinpath(main_dir, 'data', 'bev_gruppe.csv')

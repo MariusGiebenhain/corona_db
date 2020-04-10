@@ -12,6 +12,11 @@ psycopg2.extensions.register_adapter(np.int64, psycopg2._psycopg.AsIs)
 
 
 def get_credentials():
+    """
+    Ask for access information for database
+    default: local database on 5432-Port with default name(corona_db)
+    -> only password needed
+    """
     dbname = input('DB-Name: ')
     username = input('User Name: ')
     password = input('Password: ')
@@ -26,17 +31,27 @@ def get_credentials():
 
 
 def update_covid(file, con):
+    """
+    rewrite case_table with the new RKI_COVID19 data
+    """
+    # define some sql routines:
+    # reset meldung (and fall/todesfall through cascade delete)
     sql_flush = 'DELETE FROM meldung;'
+    # insert meldung/fall/todesfall
     sql_meldung = 'INSERT INTO meldung\
         VALUES(%s, %s, %s, %s);'
     sql_fall = 'INSERT INTO fall\
         VALUES(%s, %s);'
     sql_todesfall = 'INSERT INTO todesfall\
         VALUES(%s, %s);'
-    data = read_csv(file)
+    # reset cases in DB
     cur = con.cursor()
     cur.execute(sql_flush)
+    # read RKI_COVID19.csv
+    data = read_csv(file)
     for index, row in data.iterrows():
+        # for each row in the RKI_COVID19.csv write meldung + fall/todesfall to DB
+        # build bev-ID
         bev = 'w'
         if row['Geschlecht'] == 'M': bev = 'm'
         age_range = re.findall('\d+', row['Altersgruppe'])
@@ -46,12 +61,14 @@ def update_covid(file, con):
             bev += (age_range[0] + '_' + age_range[1])
         else:
             bev = ''
+        # get cases/date/referenceNumber and krs
         nCase = row['AnzahlFall']
         nDead = row['AnzahlTodesfall']
         date = row['Meldedatum']
         ref = row['ObjectId']
         date = datetime.datetime.strptime(date[0:10], '%Y-%m-%d')
         krs = row['IdLandkreis']
+        # Check whether everything worked Ok and update DB
         if not (krs == '0-1' or len(bev) == 0):
             if 11000 <= int(krs) < 12000: krs = '11000'
             cur.execute(sql_meldung, (ref, krs, bev, date))
@@ -62,16 +79,23 @@ def update_covid(file, con):
 
 
 def main():
+    """
+    downloads newest Version of the RKI_COVID19.csv from opendata.arcgis
+    update cases in DB
+    """
+    # Parse argument --keep-covid: Do not download new version if found
     parser = argparse.ArgumentParser(description='Update cases')
     parser.add_argument('--keep-covid', dest='keep', action='store_true',
                     help='do not replace existing RKI_COVID19.csv')
     args = parser.parse_args()
+    # remove existing RKI_COVID19.csv and download newest version
     url = 'https://opendata.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0.csv?session=undefined'
     main_dir = Path(__file__).absolute().parent.parent
     file = Path.joinpath(main_dir, 'data', 'RKI_COVID19.csv')
     if os.path.exists(str(file)) and not args.keep:
         os.remove(str(file))
-    wget.download(url, out=str(file))
+        wget.download(url, out=str(file))
+    # ask for access information, establish connection to DB and update
     cred = get_credentials()
     con = psycopg2.connect(
             dbname = cred['dbname'],
