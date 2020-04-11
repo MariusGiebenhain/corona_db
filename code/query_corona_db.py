@@ -62,7 +62,7 @@ def case_select(age_from, age_to, sex, change):
 
 def base_pop_select():
     """
-    create base population table for WITH statement
+    create base population query for WITH statement
     """
     sql_basepop = ', base_pop AS (SELECT DISTINCT k.krs, SUM(b.anzahl) AS gesamtpopulation \
         FROM kreis k \
@@ -73,6 +73,10 @@ def base_pop_select():
 
 
 def sub_pop_select(age_from, age_to, sex):
+    """
+    create subpopulation query for WITH statement
+    """
+    # if subpopulation is specified create fitting statement
     if len(age_from) | len(age_to) | len(sex):
         sql_subpop = ', sub_pop AS (SELECT DISTINCT k.krs, SUM(b_.anzahl) AS zielpopulation \
                 FROM kreis k \
@@ -82,12 +86,16 @@ def sub_pop_select(age_from, age_to, sex):
                 GROUP BY k.krs)'
         where_ = where_pop(age_from, age_to, sex)
         return sql_subpop.format(where_)
+    # else: return empty string
     else:
         return ''
 
 
 
 def where_pop(age_from, age_to, sex):
+    """
+    prepares where condition for target population
+    """
     where_ = ''
     cond_ = 'WHERE '
     if len(age_from):
@@ -102,6 +110,9 @@ def where_pop(age_from, age_to, sex):
 
 
 def where_date(date_from, date_to):
+    """
+    Prepares where condition on date-specification
+    """
     where_ = ''
     cond_ = 'WHERE '
     if len(date_from):
@@ -115,6 +126,11 @@ def where_date(date_from, date_to):
 def create_query():
     """
     Interactive creation of SQL-query
+    Base structure:
+    1st WITH statement queries cases for target population on Kreis level
+    2nd WITH statement queries total population on Kreis level
+    3rd WITH statement queries target population on Kreis level
+    Main Statement combines the three tables (with possible aggregation on Land/Bund-level) and filters by date
     """
     query = 'WITH {}{}{} \
         SELECT {}, \
@@ -130,16 +146,19 @@ def create_query():
         {} \
         GROUP BY {} \
         ORDER BY {};'
+    # get specifications of the query:
     res = input('Regionale Auflösung (Bund, Land, Kreis): ')
     date_from = str(input('Meldedatum vom (JJJJ-MM-TT): '))
     date_to = str(input('Meldedatum bis (JJJJ-MM-TT): '))
     age_from = input('älter als (4/14/34/59/79): ')
     age_to = input('jünger als (5/15/35/60/80): ')
-    sex = input('Geschlecht(w/m)')
+    sex = input('Geschlecht(w/m): ')
     change = input('Gebe Erhöhungen statt absoluter Zahl zurück (W): ') == 'W'
+    # Build the three with statements in sub-routines
     sql_cases = case_select(age_from, age_to, sex, change)
     sql_base_pop = base_pop_select()
     sql_sub_pop = sub_pop_select(age_from, age_to, sex)
+    # prepare main query
     sub_pop = ['', '']
     if len(sql_sub_pop) > 0:
         sub_pop[0] = ', SUM(s.zielpopulation) AS zielpopulation '
