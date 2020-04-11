@@ -44,37 +44,40 @@ def update_covid(file, con):
         VALUES(%s, %s);'
     sql_todesfall = 'INSERT INTO todesfall\
         VALUES(%s, %s);'
+    sql_genesen = 'INSERT INTO genesen\
+        VALUES(%s, %s);'
     # reset cases in DB
-    cur = con.cursor()
-    cur.execute(sql_flush)
-    # read RKI_COVID19.csv
-    data = read_csv(file)
-    for index, row in data.iterrows():
-        # for each row in the RKI_COVID19.csv write meldung + fall/todesfall to DB
-        # build bev-ID
-        bev = 'w'
-        if row['Geschlecht'] == 'M': bev = 'm'
-        age_range = re.findall('\d+', row['Altersgruppe'])
-        if len(age_range) == 1:
-            bev += '80_pl'
-        elif len(age_range) == 2:
-            bev += (age_range[0] + '_' + age_range[1])
-        else:
-            bev = ''
-        # get cases/date/referenceNumber and krs
-        nCase = row['AnzahlFall']
-        nDead = row['AnzahlTodesfall']
-        date = row['Meldedatum']
-        ref = row['ObjectId']
-        date = datetime.datetime.strptime(date[0:10], '%Y-%m-%d')
-        krs = row['IdLandkreis']
-        # Check whether everything worked Ok and update DB
-        if not (krs == '0-1' or len(bev) == 0):
-            if 11000 <= int(krs) < 12000: krs = '11000'
-            cur.execute(sql_meldung, (ref, krs, bev, date))
-            if nCase > 0: cur.execute(sql_fall, (ref, nCase))
-            if nDead > 0: cur.execute(sql_todesfall, (ref, nDead))
-    cur.close()
+    with con.cursor() as cur:
+        cur.execute(sql_flush)
+        # read RKI_COVID19.csv
+        data = read_csv(file)
+        for index, row in data.iterrows():
+            # for each row in the RKI_COVID19.csv write meldung + fall/todesfall to DB
+            # build bev-ID
+            bev = 'w'
+            if row['Geschlecht'] == 'M': bev = 'm'
+            age_range = re.findall('\d+', row['Altersgruppe'])
+            if len(age_range) == 1:
+                bev += '80_pl'
+            elif len(age_range) == 2:
+                bev += (age_range[0] + '_' + age_range[1])
+            else:
+                bev = ''
+            # get cases/date/referenceNumber and krs
+            nCase = row['AnzahlFall']
+            nDead = row['AnzahlTodesfall']
+            nRecov = row['AnzahlGenesen']
+            date = row['Meldedatum']
+            ref = row['ObjectId']
+            date = datetime.datetime.strptime(date[0:10], '%Y-%m-%d')
+            krs = row['IdLandkreis']
+            # Check whether everything worked Ok and update DB
+            if not (krs == '0-1' or len(bev) == 0):
+                if 11000 <= int(krs) < 12000: krs = '11000'
+                cur.execute(sql_meldung, (ref, krs, bev, date))
+                if nCase > 0: cur.execute(sql_fall, (ref, nCase))
+                if nDead > 0: cur.execute(sql_todesfall, (ref, nDead))
+                if nRecov > 0: cur.execute(sql_genesen, (ref, nRecov))
     return
 
 

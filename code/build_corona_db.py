@@ -90,6 +90,12 @@ def tables_corona_db(con):
         PRIMARY KEY(ref),\
         FOREIGN KEY(ref) REFERENCES meldung(ref) ON DELETE CASCADE\
         );'
+    sql_genesen = 'CREATE TABLE genesen(\
+        ref INT,\
+        anzahl INT,\
+        PRIMARY KEY(ref),\
+        FOREIGN KEY(ref) REFERENCES meldung(ref) ON DELETE CASCADE\
+        );'
     sql_kreis_2_gebiet = 'CREATE TABLE kreis_2_gebiet(\
         krs INT,\
         plz INT,\
@@ -105,6 +111,7 @@ def tables_corona_db(con):
         cur.execute(sql_meldung)
         cur.execute(sql_fall)
         cur.execute(sql_todesfall)
+        cur.execute(sql_genesen)
         cur.execute(sql_kreis_2_gebiet)
     return
 
