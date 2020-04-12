@@ -97,7 +97,7 @@ def main():
     file = Path.joinpath(main_dir, 'data', 'RKI_COVID19.csv')
     if os.path.exists(str(file)) and not args.keep:
         os.remove(str(file))
-        wget.download(url, out=str(file))
+    wget.download(url, out=str(file))
     # ask for access information, establish connection to DB and update
     cred = get_credentials()
     con = psycopg2.connect(
