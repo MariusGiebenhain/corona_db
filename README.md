@@ -29,7 +29,9 @@ Easy Access and Storage of Corona Cases in Germany
 - The script automatically queries the database server and writes results as CSV to your local `target_file`
 
 
-Needed packages: *psycopg2, pandas, numpy, pathlib, wget, re, os, csv, datetime, argparse*
+Needed libraries: *psycopg2, pandas, numpy, wget*
+
+Utilized Standard libraries: *re, datetime, argparse, pathlib, csv*
 
 Additionally, the scripts which are neccessary to build the same postgres-based database locally and 
 download the needed data are included (instructions to be added)
