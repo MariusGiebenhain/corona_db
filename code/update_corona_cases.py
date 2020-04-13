@@ -35,6 +35,7 @@ def update_covid(file, con):
     rewrite case_table with the new RKI_COVID19 data
     """
     # define some sql routines:
+    sql_krs = 'SELECT krs FROM kreis;'
     # reset meldung (and fall/todesfall through cascade delete)
     sql_flush = 'DELETE FROM meldung;'
     # insert meldung/fall/todesfall
@@ -48,6 +49,8 @@ def update_covid(file, con):
         VALUES(%s, %s);'
     # reset cases in DB
     with con.cursor() as cur:
+        cur.execute(sql_krs)
+        kreise = set(krs[0] for krs in cur.fetchall())
         cur.execute(sql_flush)
         # read RKI_COVID19.csv
         data = read_csv(file)
@@ -74,10 +77,11 @@ def update_covid(file, con):
             # Check whether everything worked Ok and update DB
             if not (krs == '0-1' or len(bev) == 0):
                 if 11000 <= int(krs) < 12000: krs = '11000'
-                cur.execute(sql_meldung, (ref, krs, bev, date))
-                if nCase > 0: cur.execute(sql_fall, (ref, nCase))
-                if nDead > 0: cur.execute(sql_todesfall, (ref, nDead))
-                if nRecov > 0: cur.execute(sql_genesen, (ref, nRecov))
+                if krs in kreise:
+                    cur.execute(sql_meldung, (ref, krs, bev, date))
+                    if nCase > 0: cur.execute(sql_fall, (ref, nCase))
+                    if nDead > 0: cur.execute(sql_todesfall, (ref, nDead))
+                    if nRecov > 0: cur.execute(sql_genesen, (ref, nRecov))
     return
 
 
@@ -97,7 +101,8 @@ def main():
     file = Path.joinpath(main_dir, 'data', 'RKI_COVID19.csv')
     if os.path.exists(str(file)) and not args.keep:
         os.remove(str(file))
-    wget.download(url, out=str(file))
+    if not os.path.exists(str(file)):
+        wget.download(url, out=str(file))
     # ask for access information, establish connection to DB and update
     cred = get_credentials()
     con = psycopg2.connect(
