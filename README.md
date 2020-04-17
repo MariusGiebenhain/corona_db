@@ -34,7 +34,7 @@ Needed libraries: *psycopg2, pandas, numpy, wget*
 Utilized Standard libraries: *re, datetime, argparse, pathlib, csv*
 
 Additionally, the scripts which are neccessary to build the same postgres-based database locally and 
-download the needed data are included (instructions to be added)
+download the needed data are included. To do so run `update_corona_cases.py` and `add_population.py`. Enter credentials according to your local postgreSQL setup (`DB-Name` defines the name of the local database - default: corona_db). Run `update_corona_cases.py` to download newest data + add it to the database.  
 
 You may query the Server directly, readonly credentials for direct queries: 
     
