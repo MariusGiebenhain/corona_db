@@ -53,7 +53,7 @@ def update_covid(file, con):
         kreise = set(krs[0] for krs in cur.fetchall())
         cur.execute(sql_flush)
         # read RKI_COVID19.csv
-        data = read_csv(file)
+        data = read_csv(file) # , encoding = 'utf_8'
         for index, row in data.iterrows():
             # for each row in the RKI_COVID19.csv write meldung + fall/todesfall to DB
             # build bev-ID
@@ -71,8 +71,8 @@ def update_covid(file, con):
             nDead = row['AnzahlTodesfall']
             nRecov = row['AnzahlGenesen']
             date = row['Meldedatum']
-            ref = row['ObjectId']
-            date = datetime.datetime.strptime(date[0:10], '%Y-%m-%d')
+            ref = row['FID']
+            date = datetime.datetime.strptime(date[0:10], '%Y/%m/%d')
             krs = row['IdLandkreis']
             # Check whether everything worked Ok and update DB
             if not (krs == '0-1' or len(bev) == 0):
