@@ -1,4 +1,7 @@
 ## corona_db
+**Currently not Working!**
+----
+
 Easy Access and Storage of Corona Cases in Germany
 
 **Instructions:**
