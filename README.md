@@ -1,23 +1,22 @@
 ## corona_db
-**Currently not Working!**
 ----
 
 Easy Access and Storage of Corona Cases in Germany
 
+Needed libraries: *psycopg2, wget*
+
+----
 **Instructions:**
+
+
+To access the online data base
 1. clone repo
-2. move to local copy and execute query_corona_db.py:
+2. move to local copy and execute queryDB.py:
 ```
-    python query_corona_db.py [target_file]
-    
-    DB-Name:
-    User Name:
-    Password:
-    Host:
-    Port:
+    python query_corona_db.py [target_file] --guest
 ```
-- Leave DB-Name, User Name, Password, Host and Port blank for Windows or type in `''` for ubuntu (all of them are already preset correctly)
-- enter specification on regional resolution, the period of time you need information on, sex and age of cases
+- `target_file` specifies the local file to store query
+- Enter specification on regional resolution, the period of time you need information on, sex and age of cases
   as well as whether you need total case numbers or increases per day (possible options for each specification are shown in parenthesis):
 ```
     Regionale Auflösung (Bund, Land, Kreis): Land
@@ -28,16 +27,9 @@ Easy Access and Storage of Corona Cases in Germany
     Geschlecht(w/m)
     Gebe Erhöhungen statt absoluter Zahl zurück (W):
 ```
-- Blank/`''` inputs imply no restriction on the given specification (our example would return cases for females and males)
-- The script automatically queries the database server and writes results as CSV to your local `target_file`
+- Blank/`''` inputs imply no restriction on the given specification (the input above returns cases for females and males combined)
+- With the `--guest` flag, script automatically queries the online-database server and writes results as CSV to the local `target_file`
 
-
-Needed libraries: *psycopg2, pandas, numpy, wget*
-
-Utilized Standard libraries: *re, datetime, argparse, pathlib, csv*
-
-Additionally, the scripts which are neccessary to build the same postgres-based database locally and 
-download the needed data are included. To do so run `update_corona_cases.py` and `add_population.py`. Enter credentials according to your local postgreSQL setup (`DB-Name` defines the name of the local database - default: corona_db). Run `update_corona_cases.py` to download newest data + add it to the database.  
 
 You may query the Server directly, readonly credentials for direct queries: 
     
@@ -46,18 +38,27 @@ You may query the Server directly, readonly credentials for direct queries:
     Password:  'pw'
     Host:      '193.196.54.54'
     Port:      '5432'
+
+-----
+**Local Installation**
+
+Additionally, all scripts utilized in building the postgres-database locally and 
+download the needed data are included. To do so run `createDB.py (--logging)`, `updateDB.py (--keep-covid) (--logging)` and `add_population.py (--logging)`. 
+
+Enter credentials according to your local postgreSQL setup. `DB-Name` defines the name of the local database (default: corona_db). `User Name` defines which user accesses the DB (default: postgres). `Password` sets the users password. `Host`(default: localhost) and `Port`(default: 5432) define the servers location and port.
+`keep-covid` stops the script from downloading the newest case data but keep the local file. `logging` writes debug info for corresponding program to the logging-dir. 
+
+Run `update_corona_cases.py` to download newest data + add it to the database.  
+
     
+
+-----
 **Relational Schema:**
 
 ![rel_schema](/corona_db.png)
 
 
-**Next steps:**
-- Adding recovered cases
-- English version of the query_corona_db API
-- Adding additional Health Data for German Districts (e.g. hospital beds)
-
-
+-----
 This projects was developed based on some of the scripts I wrote for the WirVsVirus coronadb-project - many thanks to everybody involved that weekend.
 
 Corona cases are based on data of the Bundesamt für Kartographie und Geodäsie Robert Koch-Institut; Open Data Datenlizenz Deutschland – Namensnennung – Version 2.0; Robert Koch-Institut (RKI), dl-de/by-2-0

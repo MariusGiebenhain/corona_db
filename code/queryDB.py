@@ -165,13 +165,23 @@ def main():
     parser = argparse.ArgumentParser(description='file to write to')
     parser.add_argument('file', metavar='target-file', nargs=1,
                     help='file that the query-results are written to')
+    parser.add_argument('--guest', dest='guest', action='store_true',
+                    help='use guest server-login')
     parser.add_argument('--logging', dest='log', action='store_true',
                     help='activate logging')
     args = parser.parse_args()
     home = Path(__file__).absolute().parent.parent
     log_file = Path.joinpath(home, 'logging', 'query.log')
     if args.log: logging.basicConfig(filename=log_file, level=logging.INFO)
-    cred = credentials()
+    if args.guest:
+        cred = credentials(
+                'corona_db',
+                'guest',
+                'pw',
+                '193.196.54.54',
+                '5432')
+    else:
+        cred = credentials()
     with psycopg2.connect(
             dbname = cred.dbname,
             user = cred.username, 
