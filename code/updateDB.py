@@ -79,10 +79,10 @@ def main():
     """
     # Parse argument --keep-covid: Do not download new version if found
     parser = argparse.ArgumentParser(description='Update cases')
-    parser.add_argument('--logging', dest='log', action='store_true',
-                    help='activate logging')
     parser.add_argument('--keep-covid', dest='keep', action='store_true',
                     help='do not replace existing RKI_COVID19.csv')
+    parser.add_argument('--logging', dest='log', action='store_true',
+                    help='activate logging')
     args = parser.parse_args()
     home = Path(__file__).absolute().parent.parent
     file = Path.joinpath(home, 'data', 'RKI_COVID19.csv')
