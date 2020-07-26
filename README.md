@@ -13,7 +13,7 @@ To access the online data base
 1. clone repo
 2. move to local copy and execute queryDB.py:
 ```
-    python query_corona_db.py [target_file] --guest
+    python queryDB.py [target_file] --guest
 ```
 - `target_file` specifies the local file to store query
 - Enter specification on regional resolution, the period of time you need information on, sex and age of cases
