@@ -12,17 +12,17 @@ def create_corona_db(cred, log):
     Create the new DataBase
     """
     try:
-        con = psycopg2.connect(
+        conn = psycopg2.connect(
             dbname = 'postgres',
             user = cred.username, 
             password = cred.password,
             host = cred.host,
             port = cred.port)
-        con.autocommit = True
-        with con.cursor() as cur:
+        conn.autocommit = True
+        with conn.cursor() as cur:
             cur.execute('CREATE DATABASE %s;' % (cred.dbname,))
-        con.commit()
-        con.close()
+        conn.commit()
+        conn.close()
         if log: logging.info('Successfully initiated DB')    
     except Exception as e:
         if log: logging.error('Error: ', exc_info=e)

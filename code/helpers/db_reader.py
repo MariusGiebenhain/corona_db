@@ -14,7 +14,7 @@ class db_reader:
                 header = [d[0] for d in cur.description]
                 content = []
                 row = cur.fetchone()
-                while len(row) != 0:
+                while row is not None:
                     content.append([str(e) for e in row])
                     row = cur.fetchone()
                 return {'header': header, 'content': content}

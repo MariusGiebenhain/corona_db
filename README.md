@@ -60,7 +60,7 @@ You may query the Server directly, readonly credentials for direct queries:
 
 This projects was developed based on some of the scripts I wrote for the WirVsVirus coronadb-project - many thanks to everybody involved that weekend.
 
-Corona cases are based on data of the Bundesamt für Kartographie und Geodäsie Robert Koch-Institut;
+Corona cases are based on data of the Bundesamt für Kartographie und Geodäsie Robert Koch-Institut; Open Data Datenlizenz Deutschland – Namensnennung – Version 2.0; Robert Koch-Institut (RKI), dl-de/by-2-0
 
 Population number based on Regionalstatistiken/GENESIS(dl-de-by-2.0 License)
 

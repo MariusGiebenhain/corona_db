@@ -13,3 +13,8 @@ Traceback (most recent call last):
   File "C:\Users\Marius Giebenhain\Documents\corona_db\code\helpers\db_reader.py", line 17, in read
     while len(row) != 0:
 TypeError: object of type 'NoneType' has no len()
+ERROR:root:Error: 
+Traceback (most recent call last):
+  File "C:\Users\Marius Giebenhain\Documents\corona_db\code\helpers\db_reader.py", line 17, in read
+    while len(row) != 0:
+TypeError: object of type 'NoneType' has no len()
