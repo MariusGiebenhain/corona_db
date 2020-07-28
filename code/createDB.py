@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import psycopg2
 from pathlib import Path
 from helpers.credentials import credentials
@@ -175,6 +176,8 @@ def main():
                     help='activate logging')
     args = parser.parse_args()
     home = Path(__file__).absolute().parent.parent
+    if not os.path.exists(Path.joinpath(home, 'logging')):
+        os.makedirs(Path.joinpath(home, 'logging'))
     zip_file = Path.joinpath(home, 'data', 'zipcodes.de.csv')
     bev_file = Path.joinpath(home, 'data', 'bev_gruppe.csv')
     log_file = Path.joinpath(home, 'logging', 'build_corona_db.log')
