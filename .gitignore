@@ -1,3 +1,4 @@
 *.log
+*.tmp
 RKI_COVID19.csv
 __pycache__
