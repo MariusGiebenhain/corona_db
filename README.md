@@ -42,11 +42,11 @@ You may query the Server directly, readonly credentials for direct queries:
 -----
 **Local Installation**
 
-Additionally, all scripts neccessary for creating the postgres-database locally are included. To do so run `createDB.py (--logging)`, `updateDB.py (--keep-covid) (--logging)` and `add_population.py (--logging)`.
+Additionally, all scripts neccessary for creating the postgres-database locally are included. To do so run `createDB.py (--logging)`.
 
-Run `updateDB.py (--keep-covid) (--logging)` to download newest data and add it to the database.  
+Run `updateDB.py (--keep-covid) (--logging)` to download the newest data and add it to the database.  
 
-Enter credentials according to your local postgreSQL setup. `DB-Name` defines the name of the local database (default: corona_db). `User Name` defines which user accesses the DB (default: postgres). `Password` sets the users password. `Host`(default: localhost) and `Port`(default: 5432) define the servers location and port.
+Enter credentials according to your local postgreSQL setup for both routines. `DB-Name` defines the name of the local database (default: corona_db). `User Name` defines which user accesses the DB (default: postgres). `Password` sets the users password. `Host`(default: localhost) and `Port`(default: 5432) define the servers location and port.
 `keep-covid` stops the script from downloading the newest case data but keep the local file. `logging` writes debug info for corresponding program to the logging-dir. 
 
     
