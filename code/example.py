@@ -51,7 +51,7 @@ with psycopg2.connect(
         port = '5432') as conn:
     # Create cursor
     with conn.cursor() as cur:
-        # execute query and fetch date
+        # execute query and fetch results
         cur.execute(query)
         data = cur.fetchall()
         # extract information from retrieved tuples

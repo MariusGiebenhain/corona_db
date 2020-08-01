@@ -70,15 +70,25 @@ def create_tables(conn, log):
         conn,
         log).write()
     db_writer(
-        'CREATE TABLE meldung(\
-        ref Int,\
-        krs INT,\
-        bev CHAR(6),\
-        datum DATE,\
-        PRIMARY KEY(ref),\
-        FOREIGN KEY(krs) REFERENCES kreis(krs) ON DELETE CASCADE,\
-        FOREIGN KEY(bev) REFERENCES bev_gruppe(bev)\
-        );',
+        """CREATE TABLE bevoelkerung (
+            krs INT,
+            bev CHAR(6),
+            anzahl INT,
+            PRIMARY KEY(krs, bev),
+            FOREIGN KEY(krs) REFERENCES kreis(krs) ON DELETE CASCADE,
+            FOREIGN KEY(bev) REFERENCES bev_gruppe(bev) ON DELETE CASCADE)""",
+        conn,
+        log).write()
+    db_writer(
+        """CREATE TABLE meldung(
+            ref Int,
+            krs INT,
+            bev CHAR(6),
+            datum DATE,
+            PRIMARY KEY(ref),
+            FOREIGN KEY(krs) REFERENCES kreis(krs) ON DELETE CASCADE,
+            FOREIGN KEY(bev) REFERENCES bev_gruppe(bev)
+            );""",
         conn,
         log).write()
     db_writer(
@@ -121,7 +131,23 @@ def create_tables(conn, log):
     return
 
 
-def init_db(conn, zip_file, bev_file, log):
+def process_bev(table):
+    """
+    insert population numbers in bevoelkerung table
+    """
+    age_groups = [['00','04'],['05','14'],['15','34'],['35','59'],['60','79'],['80','pl']]
+    population = []
+    for row in table.content:
+        krs = row[0]
+        for sex in ['m', 'w']:
+            for i in range(len(age_groups)):
+                bev = sex + age_groups[i][0] + '_' + age_groups[i][1]
+                n = row[i+1]
+                population.append([krs, bev, n])
+    return population
+
+
+def init_db(conn, zip_file, bev_file, bevg_file, log):
     """
     Build land/kreis/gebiet/bev_gruppe structure
     """
@@ -145,13 +171,19 @@ def init_db(conn, zip_file, bev_file, log):
         VALUES (%s, %s);',
         conn,
         log)
-    insert_bev = db_writer(
+    insert_bevg = db_writer(
         'INSERT INTO bev_gruppe\
         VALUES (%s, %s, %s, %s)',
         conn,
         log)
+    insert_bev = db_writer(
+        """INSERT INTO bevoelkerung\
+        VALUES(%s, %s, %s)""",
+        conn,
+        log)
     spatial = csv_table(zip_file)
-    bev = csv_table(bev_file)
+    bev = process_bev(csv_table(bev_file))
+    bevg = csv_table(bevg_file)
     laender = spatial.select(['state_code', 'state']).unique()
     kreise = spatial.select(['community_code', 'state_code', 'community']).unique()
     gebiete = spatial.select(['zipcode']).unique()
@@ -160,7 +192,8 @@ def init_db(conn, zip_file, bev_file, log):
     insert_kreis.write(kreise.content)
     insert_gebiet.write(gebiete.content)
     insert_kreis2gebiet.write(kreis2gebiet.content)
-    insert_bev.write(bev.content)
+    insert_bevg.write(bevg.content)
+    insert_bev.write(bev)
     return
 
 
@@ -179,7 +212,8 @@ def main():
     if not os.path.exists(Path.joinpath(home, 'logging')):
         os.makedirs(Path.joinpath(home, 'logging'))
     zip_file = Path.joinpath(home, 'data', 'zipcodes.de.csv')
-    bev_file = Path.joinpath(home, 'data', 'bev_gruppe.csv')
+    bev_file = Path.joinpath(home, 'data', 'bev.csv')
+    bevg_file = Path.joinpath(home, 'data', 'bev_gruppe.csv')
     log_file = Path.joinpath(home, 'logging', 'build_corona_db.log')
     if args.log: logging.basicConfig(filename=log_file, level=logging.INFO)
     cred = credentials()
@@ -191,7 +225,7 @@ def main():
             host = cred.host,
             port = cred.port) as conn:
         create_tables(conn, args.log)
-        init_db(conn, str(zip_file), str(bev_file), args.log)    
+        init_db(conn, str(zip_file), str(bev_file), str(bevg_file), args.log)    
     return
 
 
