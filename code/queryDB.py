@@ -13,22 +13,23 @@ def case_select(age_from, age_to, sex, change):
     """
     Create case-table for WITH statement
     """
-    sql_cases = 'cases AS (SELECT t_2.krs, t_2.datum, {}COALESCE(t_1.faelle, 0){} AS faelle, {}COALESCE(t_1.todesfaelle, 0){} AS todesfaelle, {}COALESCE(t_1.genesen, 0){} AS genesen \
-        FROM ( \
-            SELECT DISTINCT m.krs, m.datum AS datum, \
-            SUM(COALESCE(f.anzahl, 0)) AS faelle, \
-            SUM(COALESCE(t.anzahl, 0)) AS todesfaelle, \
-            SUM(COALESCE(g.anzahl, 0)) AS genesen \
-            FROM meldung m \
-                FULL JOIN fall f ON m.ref = f.ref \
-                FULL JOIN todesfall t ON m.ref = t.ref \
-                FULL JOIN genesen g ON m.ref = g.ref \
-                {} \
-            {} \
-            GROUP BY m.krs, m.datum) t_1 \
-        RIGHT JOIN (SELECT k.krs, datum.day AS datum FROM \
-            (SELECT DISTINCT krs FROM kreis) k, \
-            generate_series((SELECT MIN(datum) FROM meldung), (SELECT MAX(datum) FROM meldung), \'1 day\') AS datum(day)) t_2 ON t_1.krs = t_2.krs AND t_1.datum = t_2.datum)'
+    sql_cases = """
+        cases AS (SELECT t_2.krs, t_2.datum, {}COALESCE(t_1.faelle, 0){} AS faelle, {}COALESCE(t_1.todesfaelle, 0){} AS todesfaelle, {}COALESCE(t_1.genesen, 0){} AS genesen 
+        FROM ( 
+            SELECT DISTINCT m.krs, m.datum AS datum, 
+            SUM(COALESCE(f.anzahl, 0)) AS faelle, 
+            SUM(COALESCE(t.anzahl, 0)) AS todesfaelle, 
+            SUM(COALESCE(g.anzahl, 0)) AS genesen 
+            FROM meldung m 
+                FULL JOIN fall f ON m.ref = f.ref 
+                FULL JOIN todesfall t ON m.ref = t.ref 
+                FULL JOIN genesen g ON m.ref = g.ref 
+                {} 
+            {} 
+            GROUP BY m.krs, m.datum) t_1 
+        RIGHT JOIN (SELECT k.krs, datum.day AS datum FROM 
+            (SELECT DISTINCT krs FROM kreis) k, 
+            generate_series((SELECT MIN(datum) FROM meldung), (SELECT MAX(datum) FROM meldung), \'1 day\') AS datum(day)) t_2 ON t_1.krs = t_2.krs AND t_1.datum = t_2.datum)"""
     if change:
         over_ = ['', '']
     else:

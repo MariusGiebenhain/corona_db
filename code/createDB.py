@@ -35,38 +35,35 @@ def create_tables(conn, log):
     create all nec. tables
     see rel. schema for details
     """
-    db_writer(\
-        'CREATE TABLE land(\
-        land CHAR(2),\
-        name VARCHAR(255),\
-        PRIMARY KEY(land)\
-        );',
+    db_writer(
+        """CREATE TABLE land(
+            land CHAR(2),
+            name VARCHAR(255),
+            PRIMARY KEY(land));""",
         conn,
         log).write()
     db_writer(
-        'CREATE TABLE kreis(\
-        krs INT,\
-        land CHAR(2),\
-        name VARCHAR(255),\
-        PRIMARY KEY(krs),\
-        FOREIGN KEY(land) REFERENCES land(land)\
-        );',
+        """CREATE TABLE kreis(
+            krs INT,
+            land CHAR(2),
+            name VARCHAR(255),
+            PRIMARY KEY(krs),
+            FOREIGN KEY(land) REFERENCES land(land));""",
         conn,
         log).write()
     db_writer(
-        'CREATE TABLE gebiet(\
-        plz INT,\
-        PRIMARY KEY(plz)\
-        );',
+        """CREATE TABLE gebiet(
+            plz INT,
+            PRIMARY KEY(plz));""",
         conn,
         log).write()
     db_writer(
-        'CREATE TABLE bev_gruppe(\
-        bev CHAR(6),\
-        geschlecht CHAR(1),\
-        alter_von INT,\
-        alter_bis INT,\
-        PRIMARY KEY(bev))',
+        """CREATE TABLE bev_gruppe(
+            bev CHAR(6),
+            geschlecht CHAR(1),
+            alter_von INT,
+            alter_bis INT,
+            PRIMARY KEY(bev))""",
         conn,
         log).write()
     db_writer(
@@ -87,45 +84,40 @@ def create_tables(conn, log):
             datum DATE,
             PRIMARY KEY(ref),
             FOREIGN KEY(krs) REFERENCES kreis(krs) ON DELETE CASCADE,
-            FOREIGN KEY(bev) REFERENCES bev_gruppe(bev)
-            );""",
+            FOREIGN KEY(bev) REFERENCES bev_gruppe(bev));""",
         conn,
         log).write()
     db_writer(
-        'CREATE TABLE fall(\
-        ref INT,\
-        anzahl INT,\
-        PRIMARY KEY(ref),\
-        FOREIGN KEY(ref) REFERENCES meldung(ref) ON DELETE CASCADE\
-        );',
+        """CREATE TABLE fall(
+            ref INT,
+            anzahl INT,
+            PRIMARY KEY(ref),
+            FOREIGN KEY(ref) REFERENCES meldung(ref) ON DELETE CASCADE);""",
         conn,
         log).write()
     db_writer(
-        'CREATE TABLE todesfall(\
-        ref INT,\
-        anzahl INT,\
-        PRIMARY KEY(ref),\
-        FOREIGN KEY(ref) REFERENCES meldung(ref) ON DELETE CASCADE\
-        );',
+        """CREATE TABLE todesfall(
+            ref INT,
+            anzahl INT,
+            PRIMARY KEY(ref),
+            FOREIGN KEY(ref) REFERENCES meldung(ref) ON DELETE CASCADE);""",
         conn,
         log).write()
     db_writer(
-        'CREATE TABLE genesen(\
-        ref INT,\
-        anzahl INT,\
-        PRIMARY KEY(ref),\
-        FOREIGN KEY(ref) REFERENCES meldung(ref) ON DELETE CASCADE\
-        );',
+        """CREATE TABLE genesen(
+            ref INT,
+            anzahl INT,
+            PRIMARY KEY(ref),
+            FOREIGN KEY(ref) REFERENCES meldung(ref) ON DELETE CASCADE);""",
         conn,
         log).write()
     db_writer( 
-        'CREATE TABLE kreis_2_gebiet(\
-        krs INT,\
-        plz INT,\
-        PRIMARY KEY(krs, plz),\
-        FOREIGN KEY(krs) REFERENCES kreis(krs) ON DELETE CASCADE,\
-        FOREIGN KEY(plz) REFERENCES gebiet(plz) ON DELETE CASCADE\
-        );',
+        """CREATE TABLE kreis_2_gebiet(
+            krs INT,
+            plz INT,
+            PRIMARY KEY(krs, plz),
+            FOREIGN KEY(krs) REFERENCES kreis(krs) ON DELETE CASCADE,
+            FOREIGN KEY(plz) REFERENCES gebiet(plz) ON DELETE CASCADE);""",
         conn,
         log).write()
     return
@@ -152,33 +144,33 @@ def init_db(conn, zip_file, bev_file, bevg_file, log):
     Build land/kreis/gebiet/bev_gruppe structure
     """
     insert_land = db_writer(
-        'INSERT INTO land\
-        VALUES (%s, %s);',
+        """INSERT INTO land
+            VALUES (%s, %s);""",
         conn,
         log)
     insert_kreis = db_writer(
-        'INSERT INTO kreis\
-        VALUES (%s, %s, %s);',
+        """INSERT INTO kreis
+            VALUES (%s, %s, %s);""",
         conn,
         log)
     insert_gebiet = db_writer(
-        'INSERT INTO gebiet\
-        VALUES (%s);',
+        """INSERT INTO gebiet
+            VALUES (%s);""",
         conn,
         log)
     insert_kreis2gebiet = db_writer(
-        'INSERT INTO kreis_2_gebiet\
-        VALUES (%s, %s);',
+        """INSERT INTO kreis_2_gebiet
+            VALUES (%s, %s);""",
         conn,
         log)
     insert_bevg = db_writer(
-        'INSERT INTO bev_gruppe\
-        VALUES (%s, %s, %s, %s)',
+        """INSERT INTO bev_gruppe
+            VALUES (%s, %s, %s, %s)""",
         conn,
         log)
     insert_bev = db_writer(
-        """INSERT INTO bevoelkerung\
-        VALUES(%s, %s, %s)""",
+        """INSERT INTO bevoelkerung
+            VALUES(%s, %s, %s)""",
         conn,
         log)
     spatial = csv_table(zip_file)
