@@ -39,7 +39,7 @@ You may query the Server directly, readonly credentials for direct queries:
     Host:      '193.196.54.54'
     Port:      '5432'
 
-A script which demonstrates the usage of psycopg2 to directly query the server and the according SQL-commands is included in the examples folder (the example requires mathpyplot). 
+A script which demonstrates the usage of psycopg2 to directly query the server and the according SQL-commands is included in the examples folder (the example requires *matpyplot* to be installed). 
 
 -----
 **Local Installation**
