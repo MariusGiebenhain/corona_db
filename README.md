@@ -11,11 +11,12 @@ Needed libraries: *psycopg2, wget*
 
 To access the online data base
 1. clone repo
-2. move to local copy and execute queryDB.py:
+2. navigate to local copy and execute queryDB.py from the command line:
 ```
     python queryDB.py [target_file] --guest
 ```
 - `target_file` specifies the local file to store query
+- With the `--guest` flag, script automatically queries the online-database server
 - Enter specification on regional resolution, the period of time you need information on, sex and age of cases
   as well as whether you need total case numbers or increases per day (possible options for each specification are shown in parenthesis):
 ```
@@ -28,7 +29,6 @@ To access the online data base
     Gebe Erhöhungen statt absoluter Zahl zurück (W):
 ```
 - Blank/`''` inputs imply no restriction on the given specification (the input above returns cases for females and males combined)
-- With the `--guest` flag, script automatically queries the online-database server and writes results as CSV to the local `target_file`
 
 
 You may query the Server directly, readonly credentials for direct queries: 
@@ -38,6 +38,8 @@ You may query the Server directly, readonly credentials for direct queries:
     Password:  'pw'
     Host:      '193.196.54.54'
     Port:      '5432'
+
+A script which demonstrates the usage of psycopg2 to directly query the server and the according SQL-commands is included in the examples folder (the example requires mathpyplot). 
 
 -----
 **Local Installation**
