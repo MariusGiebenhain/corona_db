@@ -11,6 +11,9 @@ from matplotlib import colors as mcolors
 
 ########
 # Create DB-Query
+
+####
+# Query share on total cases on daily basis
 query = """
     WITH
     timeseries AS (
@@ -42,6 +45,84 @@ query = """
     JOIN popshare p ON g.bev = p.bev 
     ORDER BY g.bev, g.date;
     """
+
+###
+# Shares on moving 7-day Average
+query = """
+    WITH
+    timeseries AS (
+        SELECT date, lastweek
+        FROM generate_series( 
+            (SELECT MIN(datum) FROM meldung)::timestamp, 
+            (SELECT MAX(datum) FROM meldung)::timestamp, 
+            '1 DAY'::interval) AS date,
+			generate_series( 
+            (SELECT MIN(datum) FROM meldung)::timestamp, 
+            (SELECT MAX(datum) FROM meldung)::timestamp, 
+            '1 DAY'::interval) AS lastweek
+		WHERE date - INTERVAL '7 DAYS' < lastweek AND lastweek <= date),
+    datebev AS (
+        SELECT DISTINCT t.date, t.lastweek, b.bev
+        FROM timeseries t, bev_gruppe b),
+    groupcases AS (
+        SELECT DISTINCT d.date, d.bev, SUM(COALESCE(f.anzahl, 0)) AS cases
+        FROM meldung m
+        NATURAL JOIN fall f
+        RIGHT OUTER JOIN datebev d ON m.datum = d.lastweek AND m.bev = d.bev
+		GROUP BY d.bev, d.date),
+    totalcases AS (
+        SELECT DISTINCT t.date, SUM(COALESCE(f.anzahl, 0)) AS cases
+        FROM meldung m
+        NATURAL JOIN fall f
+        RIGHT OUTER JOIN timeseries t ON m.datum = t.lastweek
+		GROUP BY t.date),
+    popshare AS (
+        SELECT bev, SUM(anzahl)/CAST((SELECT SUM(anzahl) FROM bevoelkerung) AS FLOAT) AS popshare
+        FROM bevoelkerung
+        GROUP BY bev)
+    SELECT g.date, g.bev, g.cases/CAST(t.cases+1 AS FLOAT), p.popshare
+    FROM groupcases g
+    JOIN totalcases t ON g.date = t.date
+    JOIN popshare p ON g.bev = p.bev 
+    ORDER BY g.bev, g.date;
+    """
+    
+####
+# Query share on new cases on daily basis
+query = """
+    WITH
+    timeseries AS (
+        SELECT date
+        FROM generate_series( 
+            (SELECT MIN(datum) FROM meldung)::timestamp, 
+            (SELECT MAX(datum) FROM meldung)::timestamp, 
+            '1 day'::interval) AS date),
+    datebev AS (
+        SELECT DISTINCT t.date, b.bev
+        FROM timeseries t, bev_gruppe b),
+    groupcases AS (
+        SELECT DISTINCT d.date, d.bev, SUM(COALESCE(f.anzahl, 0)) AS cases
+        FROM meldung m
+        NATURAL JOIN fall f
+        RIGHT OUTER JOIN datebev d ON m.datum = d.date AND m.bev = d.bev
+		GROUP BY d.bev, d.date),
+    totalcases AS (
+        SELECT DISTINCT t.date, SUM(COALESCE(f.anzahl, 0)) AS cases
+        FROM meldung m
+        NATURAL JOIN fall f
+        RIGHT OUTER JOIN timeseries t ON m.datum = t.date
+		GROUP BY t.date),
+    popshare AS (
+        SELECT bev, SUM(anzahl)/CAST((SELECT SUM(anzahl) FROM bevoelkerung) AS FLOAT) AS popshare
+        FROM bevoelkerung
+        GROUP BY bev)
+    SELECT g.date, g.bev, g.cases/CAST(t.cases+1 AS FLOAT), p.popshare
+    FROM groupcases g
+    JOIN totalcases t ON g.date = t.date
+    JOIN popshare p ON g.bev = p.bev 
+    ORDER BY g.bev, g.date;
+    """
+
 # establish Connection to DB server
 with psycopg2.connect(
         dbname = 'corona_db',

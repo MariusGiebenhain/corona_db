@@ -40,6 +40,9 @@ You may query the Server directly, readonly credentials for direct queries:
     Port:      '5432'
 
 A script which demonstrates the usage of psycopg2 to directly query the server and the according SQL-commands is included in the examples folder (the example requires *matpyplot* to be installed). 
+Several interesting plots on case shares and neccessary query routines are provided with it. 
+
+A second example script shows how to add additional tables to the local database. In it the number of hospitals and hospital beds as reported in 2017 by GENESIS are added.
 
 -----
 **Local Installation**
